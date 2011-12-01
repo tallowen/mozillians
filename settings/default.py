@@ -137,7 +137,7 @@ INSTALLED_APPS = list(base.INSTALLED_APPS) + [
     'groups',
     'taskboard',
     'common',
-    # 'locations',
+    'locations',
 
     'csp',
     'jingo_minify',
@@ -150,12 +150,12 @@ INSTALLED_APPS = list(base.INSTALLED_APPS) + [
     'django.contrib.auth',
     'django_browserid',
     'bootstrapform',
+    'django.contrib.gis',
 
     # DB migrations
     'south',
     # re-assert dominance of 'django_nose'
     'django_nose',
-
 ]
 
 ## Auth

@@ -13,8 +13,9 @@ from elasticutils.models import SearchMixin
 from sorl.thumbnail import ImageField
 from PIL import Image, ImageOps
 from tower import ugettext as _, ugettext_lazy as _lazy
-
 from groups.models import Group, Skill
+from locations.models import Address
+
 
 # This is because we are using MEDIA_ROOT wrong in 1.4
 from django.core.files.storage import FileSystemStorage
@@ -175,6 +176,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     dn = '%s %s' % (instance.first_name, instance.last_name)
 
     if created:
+        address = Address.objects.create(user=instance)
         UserProfile.objects.create(user=instance, display_name=dn)
     else:
         u = UserProfile.objects.get(user=instance)

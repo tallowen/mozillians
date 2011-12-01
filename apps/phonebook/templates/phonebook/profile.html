@@ -102,9 +102,12 @@
           </dd>
         {% endif %}
 
-        {% if profile.location %}
-          <dt>{{ _('Location') }}</dt>
-          <dd>{{ profile.location }}</dd>
+        {% if profile.user.address.formatted() %}
+          <dt class="location">{{ _('Location') }}</dt>
+          <dd class="location">
+            {{ profile.user.address.formatted('city', 'province', 'country',
+                                              locale=LANG) }}
+          </dd>
         {% endif %}
 
         {% if profile.vouched_by %}
@@ -117,7 +120,6 @@
           </dd>
         {% endif %}
       </dl>
-
       {% if profile.bio %}
         <h3>{{ _('Bio:') }}{# L10n: Biography #}</h3>
         <div id="bio" class="note p-note">
@@ -143,7 +145,6 @@
           {% endfor %}
         </ul>
       {% endif %}
-
       {% if profile.skills.count() %}
         <h3>{{ _('Skills') }}</h3>
 

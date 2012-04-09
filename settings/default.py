@@ -132,12 +132,12 @@ LOGIN_REDIRECT_URL = '/register'
 
 INSTALLED_APPS = list(base.INSTALLED_APPS) + [
     # These need to go in order of migration.
+    'locations',
     'users',
     'phonebook',
     'groups',
     'taskboard',
     'common',
-    'locations',
 
     'csp',
     'jingo_minify',

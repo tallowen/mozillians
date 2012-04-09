@@ -1,8 +1,6 @@
-from django.contrib.gis.geos import fromstr
-
 from celery.decorators import task
 from geopy import geocoders
-from geopy.geocoders.google import GQueryError, GTooManyQueriesError
+from geopy.geocoders.google import GQueryError
 
 import commonware.log
 
@@ -31,4 +29,6 @@ def geocode_address(address_id):
         except GQueryError:
             point = None
 
-    Address.objects.filter(id=address.id).update(point=point)
+    address.point = point
+    # Don't queue this task again on save
+    address.save(update_point=False)

@@ -7,15 +7,11 @@ from django.core.urlresolvers import resolve
 from django.utils.safestring import mark_safe
 
 import happyforms
-import Image
-from easy_thumbnails import processors
-from product_details import product_details
 from tower import ugettext as _, ugettext_lazy as _lazy
 
-from groups.models import Group
-from locations.models import Address, Country, PostalCode
-from phonebook.models import Invite
 from groups.models import Group, Skill
+from groups.helpers import stringify_groups
+from phonebook.models import Invite
 from users.models import User, UserProfile
 
 
@@ -63,6 +59,21 @@ class UserForm(forms.ModelForm):
                                                            required=True)
     username = forms.CharField(label=_lazy(u'Username'), max_length=30,
                                                          required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Add in initial values"""
+        instance = kwargs.get('instance')
+        if instance:
+            user = instance.user
+            initial = kwargs.get('initial', {})
+            initial.update(
+                first_name=user.first_name,
+                last_name=user.last_name)
+            if not user.username.startswith('u/'):
+                initial.update(username=user.username)
+            kwargs['initial'] = initial
+
+        super(UserForm, self).__init__(*args, **kwargs)
 
     def clean_username(self):
         username = self.cleaned_data['username']
@@ -125,14 +136,6 @@ class ProfileForm(UserForm):
                                                          required=False,
                                                          widget=UsernameWidget)
 
-    #: L10n: Street address; not entire address
-    street = forms.CharField(label=_lazy(u'Address'), required=False)
-    city = forms.CharField(label=_lazy(u'City'), required=False)
-    # TODO: Add validation of states/provinces/etc. for known/large countries.
-    province = forms.CharField(label=_lazy(u'Province/State'), required=False)
-    postal_code = forms.CharField(label=_lazy(u'Postal/Zip Code'),
-                                  required=False)
-
     class Meta:
         # Model form stuff
         model = UserProfile
@@ -142,24 +145,16 @@ class ProfileForm(UserForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Add a locale-aware list of countries to the form."""
-        locale = kwargs.get('locale', 'en-US')
-        if kwargs.get('locale'):
-            del kwargs['locale']
+        """Add in initial values"""
+        instance = kwargs.get('instance')
+        if instance:
+            initial = kwargs.get('initial', {})
+            initial.update(
+                groups=stringify(instance, 'groups'),
+                skills=stringify(instance, 'skills'),)
+            kwargs['initial'] = initial
 
         super(ProfileForm, self).__init__(*args, **kwargs)
-
-        self.fields['country'] = forms.ChoiceField(label=_lazy(u'Country'),
-                required=False, choices=([['', '--']] +
-                                         Country.localized_list(locale)))
-
-    def clean_country(self):
-        """Return a country object for the country selected (None if empty)."""
-        if not self.cleaned_data['country']:
-            return None
-
-        country = Country.objects.filter(id=self.cleaned_data['country'])
-        return country[0] if country else None
 
     def clean_groups(self):
         """Groups are saved in lowercase because it's easy and consistent."""
@@ -192,50 +187,6 @@ class ProfileForm(UserForm):
         self.instance.set_membership(Skill, self.cleaned_data['skills'])
         super(ProfileForm, self).save(request.user)
 
-<<<<<<< HEAD
-=======
-        # TODO: Not needed/put in ProfileForm?
-        """
-        profile = request.user.get_profile()
-        profile.website = self.cleaned_data['website']
-
-        address = request.user.address
-        address.street = self.cleaned_data['street']
-        address.city = self.cleaned_data['city']
-        address.province = self.cleaned_data['province']
-        address.country = self.cleaned_data['country']
-
-        if self.cleaned_data['postal_code']:
-            postal_code, created = PostalCode.objects.get_or_create(
-                    code=self.cleaned_data['postal_code'])
-            address.postal_code = postal_code
-        else:
-            address.postal_code = None
-
-        address.save()
-        profile.save()
-        """
-
-    def _save_groups(self, request):
-        """Parse a string of (usually comma-demilited) groups and save them."""
-        profile = request.user.get_profile()
-
-        # Remove any non-system groups that weren't supplied in this list.
-        profile.groups.remove(*[g for g in profile.groups.all()
-                                if g.name not in self.cleaned_data['groups']
-                                and not g.system])
-
-        # Add/create the rest of the groups
-        groups_to_add = []
-        for g in self.cleaned_data['groups']:
-            (group, created) = Group.objects.get_or_create(name=g)
-
-            if not group.system:
-                groups_to_add.append(group)
-
-        profile.groups.add(*groups_to_add)
-
->>>>>>> Add location/geo settings
 
 class VouchForm(happyforms.Form):
     """Vouching is captured via a user's id."""
@@ -261,3 +212,10 @@ class InviteForm(happyforms.ModelForm):
     class Meta:
         model = Invite
         exclude = ('redeemer', 'inviter')
+
+def stringify(profile, obj_name):
+    """
+    Takes a profile and a type (probably skill or group) and returns its
+    stringified objects
+    """
+    return stringify_groups(getattr(profile, obj_name).all().order_by('name'))

@@ -76,6 +76,15 @@
       </h2>
 
       <dl>
+        {% if profile.address.formatted() %}
+          <dt>{{ _('Location') }}</dt>
+          <dd>
+            <a href="http://maps.google.com/maps?q={{ profile.address.formatted('city', 'province', 'country', locale=LANG)|urlencode }}" class="location-text">
+              {{ profile.address.formatted('city', 'province', 'country', locale=LANG) }}
+            </a>
+          </dd>
+        {% endif %}
+
         {% if shown_user.email %}
           <dt>{{ _('Email') }}</dt>
           <dd><a href="mailto:{{ shown_user.email }}">
@@ -99,14 +108,6 @@
           <dt>{{ _('Website') }}</dt>
           <dd><a rel="me" href="{{ profile.website }}">
             {{ profile.website }}</a>
-          </dd>
-        {% endif %}
-
-        {% if profile.user.address.formatted() %}
-          <dt class="location">{{ _('Location') }}</dt>
-          <dd class="location">
-            {{ profile.user.address.formatted('city', 'province', 'country',
-                                              locale=LANG) }}
           </dd>
         {% endif %}
 

@@ -23,17 +23,21 @@
       <div class="tab-content">
         <div class="tab-pane active" id="1">
           <legend>{{ _('Profile') }}</legend>
-          {% include 'phonebook/includes/photo_form.html' %}
-          {{ bootstrap(form.first_name) }}
-          {{ bootstrap(form.last_name) }}
-          {{ bootstrap(form.website) }}
-          {{ bootstrap(form.bio) }}
+          <fieldset>
+            {% include 'phonebook/includes/photo_form.html' %}
+            {{ bootstrap(form.first_name) }}
+            {{ bootstrap(form.last_name) }}
+            {{ bootstrap(form.website) }}
+            {{ bootstrap(form.bio) }}
+          </fieldset>
           <legend>{{ _('Location') }}</legend>
-          {{ bootstrap(address_form.street) }}
-          {{ bootstrap(address_form.city) }}
-          {{ bootstrap(address_form.province) }}
-          {{ bootstrap(address_form.postal_code) }}
-          {{ bootstrap(address_form.country) }}
+          <fieldset>
+            {{ bootstrap(address_form.street) }}
+            {{ bootstrap(address_form.city) }}
+            {{ bootstrap(address_form.province) }}
+            {{ bootstrap(address_form.postal_code) }}
+            {{ bootstrap(address_form.country) }}
+          </fieldset>
         </div>
         <div class="tab-pane" id="skills">
           <p class="field_description">

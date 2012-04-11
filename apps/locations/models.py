@@ -1,7 +1,7 @@
 from django.contrib.gis.db import models
-from django.dispatch import receiver
 
 from product_details import product_details
+from tower import ugettext_lazy as _lazy
 
 from locations.tasks import geocode_address
 
@@ -50,10 +50,10 @@ class Country(models.Model):
 class Address(models.Model):
     """An address is a user's full street address including country."""
     #: An address belongs to a User. They're created when a User is created.
-    street = models.CharField(max_length=200, null=True)
-    city = models.CharField(max_length=150, null=True)  # Bangkok, lol.
-    province = models.CharField(max_length=200, null=True)
-    postal_code = models.CharField(max_length=50, null=True)
+    street = models.CharField(max_length=200, verbose_name=_lazy(u'Address'), blank=True, null=True)
+    city = models.CharField(max_length=150, verbose_name=_lazy(u'City'), blank=True, null=True)  # Bangkok, lol.
+    province = models.CharField(max_length=200, verbose_name=_lazy(u'Province/State'), blank=True, null=True)
+    postal_code = models.CharField(max_length=50, verbose_name=_lazy(u'Postal/Zip Code'), blank=True, null=True)
     country = models.ForeignKey('Country', null=True)
 
     #: We don't use SPATIAL indexes because we're using MySQL InnoDB tables.
@@ -63,6 +63,10 @@ class Address(models.Model):
     objects = models.GeoManager()
 
     def save(self, *args, **kwargs):
+        """
+        Defaults to updating the point on the model. If update_point=False
+        is passed in, then don't trigger the celery task.
+        """
         update_point = kwargs.get('update_point', True)
         if 'update_point' in kwargs:
             del(kwargs['update_point'])

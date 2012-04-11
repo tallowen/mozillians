@@ -18,9 +18,7 @@ class Migration(SchemaMigration):
                 if not u.address:
                     u.address = orm.Address.objects.create()
 
-
     def backwards(self, orm):
-
         # Deleting field 'UserProfile.address'
         db.delete_column('profile', 'address_id')
 
@@ -89,19 +87,13 @@ class Migration(SchemaMigration):
             'country': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.Country']", 'null': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'point': ('django.contrib.gis.db.models.fields.PointField', [], {'null': 'True', 'spatial_index': 'False'}),
-            'postal_code': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.PostalCode']", 'null': 'True'}),
+            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
             'province': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'}),
             'street': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'})
         },
         'locations.country': {
             'Meta': {'object_name': 'Country'},
             'code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'poly': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'spatial_index': 'False'})
-        },
-        'locations.postalcode': {
-            'Meta': {'object_name': 'PostalCode'},
-            'code': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'poly': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'spatial_index': 'False'})
         },

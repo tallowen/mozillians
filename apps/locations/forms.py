@@ -2,38 +2,39 @@ from django import forms
 
 from tower import ugettext_lazy as _lazy
 
-from locations.models import Country
+from locations.models import Address, Country
 
 
 class AddressForm(forms.ModelForm):
 
-    first_name = forms.CharField(label=_lazy(u'First Name'), max_length=30,
-                                                             required=False)
-
-    #: L10n: Street address; not entire address
-    street = forms.CharField(label=_lazy(u'Address'), required=False)
-    city = forms.CharField(label=_lazy(u'City'), required=False)
-    # TODO: Add validation of states/provinces/etc. for known/large countries.
-    province = forms.CharField(label=_lazy(u'Province/State'), required=False)
-    postal_code = forms.CharField(label=_lazy(u'Postal/Zip Code'),
-                                  required=False)
+    class Meta:
+        # Model form stuff
+        model = Address
+        # Foreign key defaults to choices in a model form. Set the right
+        # choices in the init method.
+        fields = ('street', 'city', 'province', 'postal_code', 'country')
 
     def __init__(self, *args, **kwargs):
         """Add a locale-aware list of countries to the form."""
+
+        # If we have an instance and that instance has a country, lets update
+        # the intial option to be the one of the country.
+        instance = kwargs.get('instance')
+        if instance:
+            initial = kwargs.get('initial', {})
+            if instance.country:
+                initial.update(country=instance.country.id)
+
+            kwargs['initial'] = initial
+
+        # Get our current local from keywords.
         locale = kwargs.get('locale', 'en-US')
         if kwargs.get('locale'):
             del kwargs['locale']
 
-        instance = kwargs.get('instance')
-        if instance:
-            initial = kwargs.get('initial', {})
-            if instance.postal_code:
-                initial.update(postal_code=instance.postal_code.code)
-
-            kwargs['initial'] = initial
-
         super(AddressForm, self).__init__(*args, **kwargs)
 
+        # Set the country fields to the properly localized ones.
         self.fields['country'] = forms.ChoiceField(label=_lazy(u'Country'),
                 required=False, choices=([['', '--']] +
                                          Country.localized_list(locale)))
@@ -43,5 +44,5 @@ class AddressForm(forms.ModelForm):
         if not self.cleaned_data['country']:
             return None
 
-        country = Country.objects.filter(id=self.cleaned_data['country'])
-        return country[0] if country else None
+        country = Country.objects.filter(id=self.cleaned_data['country'])[0]
+        return country if country else None

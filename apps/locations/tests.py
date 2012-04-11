@@ -30,9 +30,9 @@ class TestLocations(common.tests.TestCase):
         canada, created = Country.objects.get_or_create(code='ca')
 
         r = self.client.post(reverse('profile.edit'),
-                        dict(last_name='tofumatt', city='Montreal',
-                             province='QC', country=canada.id),
-                        follow=True)
+                             dict(last_name='tofumatt', city='Montreal',
+                                  province='QC', country=canada.id),
+                             follow=True)
         doc = pq(r.content)
 
         assert doc('#profile-info'), ('User should be on their profile '
@@ -42,9 +42,10 @@ class TestLocations(common.tests.TestCase):
                 'Location info should appear in the page.')
 
         eq_('Montreal, QC, Canada', doc('dd a.location-text').text(), (
-                'Location data should appear as submitted.'))
+            'Location data should appear as submitted.'))
 
         profile = User.objects.get(email=self.mozillian.email).get_profile()
+
         assert profile.address.point is not None, (
                 "User's address should be geolocated and have an associated "
                 'POINT object stored in the database.')
@@ -54,20 +55,20 @@ class TestLocations(common.tests.TestCase):
         self.client.login(email=self.mozillian.email)
 
         r = self.client.post(reverse('profile.edit'),
-                        dict(last_name='Luedecke', city='Hinterland Noplace',
-                             province='XB'),
-                        follow=True)
+                             dict(last_name='Luedecke',
+                                  city='Hinterland Noplace', province='XB'),
+                             follow=True)
         doc = pq(r.content)
         assert doc('#profile-info'), ('User should be on their profile '
                                       'page after submitting the form.')
         assert (doc('dd a.location-text'),
-                        'Location info should appear in the page.')
+                'Location info should appear in the page.')
 
         eq_('Hinterland Noplace, XB', doc('dd a.location-text').text(), (
             'Location data should appear as submitted.'))
 
         profile = User.objects.get(email=self.mozillian.email).get_profile()
-        assert profile.address.point is None, (
+        assert (profile.address.point is None,
                 "User's address should not be geolocated.")
 
     def test_location_can_be_removed(self):
@@ -83,15 +84,18 @@ class TestLocations(common.tests.TestCase):
         address.country = canada
         address.save()
 
-        r = self.client.post(reverse('profile', args=[self.mozillian.username]))
+        r = self.client.post(reverse('profile',
+                             args=[self.mozillian.username]))
         doc = pq(r.content)
 
-        assert doc('dd a.location-text'), 'Location info should appear in the page.'
-        eq_('Halifax, NS, Canada', doc('dd a.location-text').text(), (
-                'Location data should appear as submitted.'))
+        assert (doc('dd a.location-text'),
+                'Location info should appear in the page.')
+
+        eq_('Halifax, NS, Canada', doc('dd a.location-text').text(),
+            'Location data should appear as submitted.')
 
         profile = User.objects.get(email=self.mozillian.email).get_profile()
-        assert profile.address.point is not None, (
+        assert (profile.address.point is not None,
                 "User's address should be geolocated and have an associated "
                 'POINT object stored in the database.')
 
@@ -101,11 +105,12 @@ class TestLocations(common.tests.TestCase):
                         follow=True)
         doc = pq(r.content)
 
-        assert doc('#profile-info'), ('User should be on their profile '
-                                      'page after submitting the form.')
-        assert not doc('dd a.location'), (
+        assert (doc('#profile-info'), 'User should be on their profile page '
+                                      'after submitting the form.')
+
+        assert (not doc('dd a.location'),
                 "Location info should no longer appear on the user's profile.")
 
         profile = User.objects.get(email=self.mozillian.email).get_profile()
-        assert profile.address.point is None, (
+        assert (profile.address.point is None,
                 "User's address should no longer be geolocated.")

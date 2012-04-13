@@ -9,9 +9,10 @@ from django.utils.safestring import mark_safe
 import happyforms
 from tower import ugettext as _, ugettext_lazy as _lazy
 
-from phonebook.models import Invite
 from groups.models import Group, Skill
 from users.models import User, UserProfile
+from phonebook.helpers import compare_permissions
+from phonebook.models import Invite
 
 
 PAGINATION_LIMIT = 20
@@ -133,7 +134,8 @@ class ProfileForm(UserForm):
     class Meta:
         # Model form stuff
         model = UserProfile
-        fields = ('ircname', 'website', 'bio', 'photo')
+        fields = ('ircname', 'website', 'bio', 'photo', 'basic_info_privacy',
+                  'contact_info_privacy', 'tags_privacy')
         widgets = {
             'bio': forms.Textarea()
         }
@@ -165,6 +167,14 @@ class ProfileForm(UserForm):
 
     def save(self, request):
         """Save the data to profile."""
+        perms = [self.cleaned_data['contact_info_privacy'],
+                 self.cleaned_data['tags_privacy']]
+
+        basic = self.cleaned_data['basic_info_privacy']
+        if any([not compare_permissions(basic, p) for p in perms]):
+            raise forms.ValidationError(_(u'Basic info cannot be more private '
+                                           'than other information.'))
+
         self.instance.set_membership(Group, self.cleaned_data['groups'])
         self.instance.set_membership(Skill, self.cleaned_data['skills'])
         super(ProfileForm, self).save(request.user)

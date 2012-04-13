@@ -10,10 +10,27 @@ from django.utils.safestring import mark_safe
 import jinja2
 from funfactory.utils import absolutify
 from jingo import register
+from tower import ugettext as _
 
 PARAGRAPH_RE = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 absolutify = register.function(absolutify)
+
+PERMISSION_LEVELS = (
+    ('AD', _('Administrator')),
+    ('VO', _('Vouched')),
+    ('PB', _('Public')),
+)
+
+
+def compare_permissions(mine, your):
+    """
+    Compares my allowed permission vs your level. Returns True if you
+    have nessasary permissions
+    """
+    keys = [p[0] for p in PERMISSION_LEVELS]
+    permission_hash = dict(map(lambda a, b: (a, b), keys, range(0, len(keys))))
+    return not permission_hash[mine] < permission_hash[your]
 
 
 @register.filter

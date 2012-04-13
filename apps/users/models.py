@@ -15,7 +15,8 @@ from PIL import Image, ImageOps
 from tower import ugettext as _, ugettext_lazy as _lazy
 
 from groups.models import Group, Skill
-from phonebook.helpers import gravatar
+from phonebook.helpers import (compare_permissions,
+                               gravatar, PERMISSION_LEVELS)
 
 # This is because we are using MEDIA_ROOT wrong in 1.4
 from django.core.files.storage import FileSystemStorage
@@ -47,6 +48,16 @@ class UserProfile(SearchMixin, models.Model):
                                verbose_name=_lazy(u'IRC Nickname'),
                                default='', blank=True)
 
+    # Privacy bits:
+    basic_info_privacy = models.CharField(max_length=2, default='VO',
+            choices=PERMISSION_LEVELS, verbose_name=_lazy(u'Basic Info'))
+
+    contact_info_privacy = models.CharField(max_length=2, default='VO',
+            choices=PERMISSION_LEVELS, verbose_name=_lazy(u'Contact Info'))
+
+    tags_privacy = models.CharField(max_length=2, choices=PERMISSION_LEVELS,
+            default='VO', verbose_name=_lazy(u'Skills and Groups'))
+
     @property
     def full_name(self):
         return '%s %s' % (self.user.first_name, self.user.last_name)
@@ -57,6 +68,35 @@ class UserProfile(SearchMixin, models.Model):
     def __unicode__(self):
         """Return this user's name when their profile is called."""
         return self.display_name
+
+    def get_profile_info(self, user):
+        """Returns profile info as a given user is allowed to see"""
+        fields_control = (
+            ('bio', self.bio, self.basic_info_privacy),
+            ('display_name', self.display_name, self.basic_info_privacy),
+            ('email', self.user.email, self.contact_info_privacy),
+            ('groups', self.groups, self.tags_privacy),
+            ('ircname', self.ircname, self.contact_info_privacy),
+            ('photo_url', self.photo_url(), self.basic_info_privacy),
+            ('skills', self.skills, self.tags_privacy),
+            ('username', self.user.username, self.basic_info_privacy),
+            ('vouched_by', self.vouched_by, self.contact_info_privacy),
+            ('website', self.website, self.basic_info_privacy),
+        )
+
+        # Default to public permissions.
+        their_permissions = 'PB'
+        # Make sure user isn't anonymous, then check if is vouched.
+        if user.is_authenticated() and user.get_profile().is_vouched:
+            their_permissions = 'VO'
+
+        def check_perm(field):
+            if compare_permissions(field[2], their_permissions):
+                return field[:2]
+
+            return (field[0], None)
+
+        return dict(map(check_perm, fields_control))
 
     def anonymize(self):
         """Remove personal info from a user"""

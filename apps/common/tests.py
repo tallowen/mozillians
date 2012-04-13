@@ -33,6 +33,11 @@ class TestCase(test_utils.TestCase):
         self.mozillian_client.login(email=self.mozillian.email)
         self.pending_client = test.Client()
         self.pending_client.login(email=self.pending.email)
+        # Basic privacy options to include with tests that post to edit profile
+        self.privacy_dict = dict(
+                basic_info_privacy='VO',
+                contact_info_privacy='VO',
+                tags_privacy='VO')
 
     @classmethod
     def tearDownClass(cls):

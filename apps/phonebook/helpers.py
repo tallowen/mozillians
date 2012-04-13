@@ -17,7 +17,6 @@ PARAGRAPH_RE = re.compile(r'(?:\r\n|\r|\n){2,}')
 absolutify = register.function(absolutify)
 
 PERMISSION_LEVELS = (
-    ('AD', _('Administrator')),
     ('VO', _('Vouched')),
     ('PB', _('Public')),
 )

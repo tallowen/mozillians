@@ -167,14 +167,6 @@ class ProfileForm(UserForm):
 
     def save(self, request):
         """Save the data to profile."""
-        perms = [self.cleaned_data['contact_info_privacy'],
-                 self.cleaned_data['tags_privacy']]
-
-        basic = self.cleaned_data['basic_info_privacy']
-        if any([not compare_permissions(basic, p) for p in perms]):
-            raise forms.ValidationError(_(u'Basic info cannot be more private '
-                                           'than other information.'))
-
         self.instance.set_membership(Group, self.cleaned_data['groups'])
         self.instance.set_membership(Skill, self.cleaned_data['skills'])
         super(ProfileForm, self).save(request.user)

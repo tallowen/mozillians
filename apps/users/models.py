@@ -86,11 +86,18 @@ class UserProfile(SearchMixin, models.Model):
 
         # Default to public permissions.
         their_permissions = 'PB'
+        is_me = False
         # Make sure user isn't anonymous, then check if is vouched.
-        if user.is_authenticated() and user.get_profile().is_vouched:
-            their_permissions = 'VO'
+        if user.is_authenticated():
+            if user.get_profile() == self:
+                is_me = True
+            if user.get_profile().is_vouched:
+                their_permissions = 'VO'
 
         def check_perm(field):
+            # You get to see everything on your own profile.
+            if is_me:
+                return field[:2]
             if compare_permissions(field[2], their_permissions):
                 return field[:2]
 

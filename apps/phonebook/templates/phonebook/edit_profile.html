@@ -91,31 +91,34 @@
           {% endif %}
         </div>
         <div class="tab-pane" id="privacy">
-          <legend>{{ _('Basic Info') }}</legend>
-          {{ bootstrap(form.basic_info_privacy) }}
-          <p class="field_description">
-            {% trans %}
-              Basic profile info includes your bio, photo, name and username.
-              If you set this option to public, your profile will be visable by
-              anyone on the internet.
-            {% endtrans %}
-          </p>
-          <legend>{{ _('Contact Info') }}</legend>
-          {{ bootstrap(form.contact_info_privacy) }}
-          <p class="field_description">
-            {% trans %}
-              Contact info is the ways in which people contact you. This
-              includes email, ircname, and who vouched for you.
-            {% endtrans %}
-          </p>
-          <legend>{{ _('Skills and Groups') }}</legend>
-          {{ bootstrap(form.tags_privacy) }}
-          <p class="field_description">
-            {% trans %}
-              Who do you want to let know about your skils and what you're
-              involved with? Set your preference with this option.
-            {% endtrans %}
-          </p>
+          <div>
+            <legend>{{ _('Basic Info') }}</legend>
+            {{ bootstrap(form.basic_info_privacy) }}
+            <p class="field_description">
+              {% trans %}
+                Includes your bio, photo, name and username.
+              {% endtrans %}
+            </p>
+          </div>
+          <div>
+            <legend>{{ _('Contact Info') }}</legend>
+            {{ bootstrap(form.contact_info_privacy) }}
+            <p class="field_description">
+              {% trans %}
+                Includes e-mail, IRC nickname, and who
+                vouched for you.
+              {% endtrans %}
+            </p>
+          </div>
+          <div>
+            <legend>{{ _('Skills and Groups') }}</legend>
+            {{ bootstrap(form.tags_privacy) }}
+            <p class="field_description">
+              {% trans %}
+                Includes your skills and the groups you categorize yourself to.
+              {% endtrans %}
+            </p>
+          </div>
         </div>
         <div class="tab-pane" id="account">
           {{ bootstrap(form.username) }}

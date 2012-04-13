@@ -5,7 +5,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import cache_page, never_cache
 from django.views.decorators.http import require_POST
@@ -45,16 +45,12 @@ def profile(request, username):
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        # This is so that something like localhost:8000/tasks redirects
-        # to localhost:8000/tasks/ correctly.
-        return redirect(request.path + r'/')
+        return HttpResponseNotFound()
 
     profile = user.get_profile()
     profile_info = profile.get_profile_info(request.user)
     if not any([profile_info[k] for k in profile_info.keys()]):
-        # This is so that something like localhost:8000/tasks redirects
-        # to localhost:8000/tasks/ correctly.
-        return redirect(request.path + r'/')
+        return HttpResponseNotFound()
 
     vouch_form = None
     is_vouched = profile.is_vouched if profile else False

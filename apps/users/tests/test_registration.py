@@ -12,7 +12,6 @@ from common.tests import TestCase
 
 
 class RegistrationTest(TestCase):
-    """Tests registration."""
     # Assertion doesn't matter since we monkey patched it for testing
     fake_assertion = 'mrfusionsomereallylongstring'
 

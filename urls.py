@@ -42,7 +42,7 @@ if settings.DEBUG:
     media_url = settings.MEDIA_URL.lstrip('/').rstrip('/')
     urlpatterns += patterns('',
         (r'^%s/(?P<path>.*)$' % media_url, 'django.views.static.serve',
-         {'document_root': settings.MEDIA_ROOT}),
+         dict(document_root=settings.MEDIA_ROOT)),
         # Add the 404, 500, and csrf pages for testing
         (r'^404$', handler404),
         (r'^500$', handler500),

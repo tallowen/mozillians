@@ -7,19 +7,19 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Adding field 'UserProfile.basic_info_privacy'
-        db.add_column('profile', 'basic_info_privacy', self.gf('django.db.models.fields.CharField')(default='VO', max_length=2), keep_default=False)
+        db.add_column('profile', 'basic_info_privacy', self.gf('django.db.models.fields.IntegerField')(default=20), keep_default=False)
 
         # Adding field 'UserProfile.contact_info_privacy'
-        db.add_column('profile', 'contact_info_privacy', self.gf('django.db.models.fields.CharField')(default='VO', max_length=2), keep_default=False)
+        db.add_column('profile', 'contact_info_privacy', self.gf('django.db.models.fields.IntegerField')(default=20), keep_default=False)
 
         # Adding field 'UserProfile.tags_privacy'
-        db.add_column('profile', 'tags_privacy', self.gf('django.db.models.fields.CharField')(default='VO', max_length=2), keep_default=False)
+        db.add_column('profile', 'tags_privacy', self.gf('django.db.models.fields.IntegerField')(default=20), keep_default=False)
 
 
     def backwards(self, orm):
-        
+
         # Deleting field 'UserProfile.basic_info_privacy'
         db.delete_column('profile', 'basic_info_privacy')
 
@@ -90,9 +90,9 @@ class Migration(SchemaMigration):
         },
         'users.userprofile': {
             'Meta': {'object_name': 'UserProfile', 'db_table': "'profile'"},
-            'basic_info_privacy': ('django.db.models.fields.CharField', [], {'default': "'VO'", 'max_length': '2'}),
+            'basic_info_privacy': ('django.db.models.fields.IntegerField', [], {'default': '20', 'max_length': '2'}),
             'bio': ('django.db.models.fields.TextField', [], {'default': "''", 'blank': 'True'}),
-            'contact_info_privacy': ('django.db.models.fields.CharField', [], {'default': "'VO'", 'max_length': '2'}),
+            'contact_info_privacy': ('django.db.models.fields.IntegerField', [], {'default': '20', 'max_length': '2'}),
             'display_name': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '255', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['groups.Group']", 'symmetrical': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -101,7 +101,7 @@ class Migration(SchemaMigration):
             'last_updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'auto_now': 'True', 'blank': 'True'}),
             'photo': ('sorl.thumbnail.fields.ImageField', [], {'default': "''", 'max_length': '100', 'blank': 'True'}),
             'skills': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['groups.Skill']", 'symmetrical': 'False'}),
-            'tags_privacy': ('django.db.models.fields.CharField', [], {'default': "'VO'", 'max_length': '2'}),
+            'tags_privacy': ('django.db.models.fields.IntegerField', [], {'default': '20'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['auth.User']", 'unique': 'True'}),
             'vouched_by': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['users.UserProfile']", 'null': 'True'}),
             'website': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '200', 'null': 'True', 'blank': 'True'})

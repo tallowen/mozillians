@@ -15,13 +15,23 @@ from PIL import Image, ImageOps
 from tower import ugettext as _, ugettext_lazy as _lazy
 
 from groups.models import Group, Skill
-from phonebook.helpers import (compare_permissions,
-                               gravatar, PERMISSION_LEVELS)
+from phonebook.helpers import gravatar, PUBLIC, PERMISSION_LEVELS, VOUCHED
 
 # This is because we are using MEDIA_ROOT wrong in 1.4
 from django.core.files.storage import FileSystemStorage
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT,
                        base_url='/media/uploads/')
+
+
+class PrivacyField(models.IntegerField):
+    def __init__(self, *args, **kwargs):
+        presets = dict(default=VOUCHED, choices=PERMISSION_LEVELS)
+
+        for key in presets:
+            if not hasattr(kwargs, key):
+                kwargs[key] = presets[key]
+
+        super(PrivacyField, self).__init__(*args, **kwargs)
 
 
 class UserProfile(SearchMixin, models.Model):
@@ -49,14 +59,9 @@ class UserProfile(SearchMixin, models.Model):
                                default='', blank=True)
 
     # Privacy bits:
-    basic_info_privacy = models.CharField(max_length=2, default='VO',
-            choices=PERMISSION_LEVELS, verbose_name=_lazy(u'Basic Info'))
-
-    contact_info_privacy = models.CharField(max_length=2, default='VO',
-            choices=PERMISSION_LEVELS, verbose_name=_lazy(u'Contact Info'))
-
-    tags_privacy = models.CharField(max_length=2, choices=PERMISSION_LEVELS,
-            default='VO', verbose_name=_lazy(u'Skills and Groups'))
+    basic_info_privacy = PrivacyField(verbose_name=_lazy(u'Basic Info'))
+    contact_info_privacy = PrivacyField(verbose_name=_lazy(u'Contact Info'))
+    tags_privacy = PrivacyField(verbose_name=_lazy(u'Skills and Groups'))
 
     @property
     def full_name(self):
@@ -85,25 +90,33 @@ class UserProfile(SearchMixin, models.Model):
         )
 
         # Default to public permissions.
-        their_permissions = 'PB'
+        their_permissions = PUBLIC
         is_me = False
         # Make sure user isn't anonymous, then check if is vouched.
         if user.is_authenticated():
-            if user.get_profile() == self:
+            their_profile = user.get_profile()
+            if their_profile == self:
                 is_me = True
             if user.get_profile().is_vouched:
-                their_permissions = 'VO'
+                their_permissions = their_profile.permission_level()
 
         def check_perm(field):
             # You get to see everything on your own profile.
             if is_me:
                 return field[:2]
-            if compare_permissions(field[2], their_permissions):
+            if field[2] <= their_permissions:
                 return field[:2]
 
             return (field[0], None)
 
         return dict(map(check_perm, fields_control))
+
+    def permission_level(self):
+        if self.is_vouched:
+            return VOUCHED
+
+        return PUBLIC
+
 
     def anonymize(self):
         """Remove personal info from a user"""

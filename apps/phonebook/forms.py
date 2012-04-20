@@ -10,9 +10,8 @@ import happyforms
 from tower import ugettext as _, ugettext_lazy as _lazy
 
 from groups.models import Group, Skill
-from users.models import User, UserProfile
-from phonebook.helpers import compare_permissions
 from phonebook.models import Invite
+from users.models import User, UserProfile
 
 
 PAGINATION_LIMIT = 20

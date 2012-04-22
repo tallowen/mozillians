@@ -1,22 +1,20 @@
-import os
-
-from django.conf import settings
-
 from nose.tools import eq_
 from pyquery import PyQuery as pq
 
 from common.tests import ESTestCase
-from elasticutils import get_es
 from funfactory.urlresolvers import reverse
 
 from users.models import UserProfile
+from phonebook.tests import user, vouch, add_profilepic
 
 
 class TestSearch(ESTestCase):
+
     def test_search_with_space(self):
         """Extra spaces should not impact search queries."""
         amanda = 'Amanda Younger'
         amandeep = 'Amandeep McIlrath'
+
         url = reverse('search')
         r = self.mozillian_client.get(url, dict(q='Am'))
         rs = self.mozillian_client.get(url, dict(q=' Am'))
@@ -42,6 +40,8 @@ class TestSearch(ESTestCase):
         """Make sure that only non vouched users are returned on search."""
         amanda = 'Amanda Younger'
         amandeep = 'Amandeep McIlrath'
+        user(first_name='Amanda', last_name='Unvouched')
+
         url = reverse('search')
         r = self.mozillian_client.get(url, dict(q='Am'))
         rnv = self.mozillian_client.get(url, dict(q='Am', nonvouched_only=1))
@@ -70,18 +70,25 @@ class TestSearch(ESTestCase):
 
     def test_profilepic_search(self):
         """Make sure searching for only users with profile pics works."""
-        with open(os.path.join(os.path.dirname(__file__), 'profile-photo.jpg')) as f:
-            r = self.mozillian_client.post(reverse('profile.edit'),
-                dict(first_name='Aman', last_name='Withapic', photo=f))
 
-        if not settings.ES_DISABLED:
-            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
+        u = user(first_name='Aman', last_name='Withapic')
+        vouch(u)
+        add_profilepic(u)
+
+        p = user(first_name='Amanda', last_name='Picture')
+        vouch(p)
+        add_profilepic(p)
+
+        s = user(email='usedtosearch@example.com')
+        vouch(s)
+
+        self.client.login(email="usedtosearch@example.com")
 
         amanhasapic = 'Aman Withapic'
         amanda = 'Amanda Younger'
         url = reverse('search')
-        r = self.mozillian_client.get(url, dict(q='Am'))
-        rpp = self.mozillian_client.get(url, dict(q='Am', picture_only=1))
+        r = self.client.get(url, dict(q='Am'))
+        rpp = self.client.get(url, dict(q='Am', picture_only=1))
 
         eq_(r.status_code, 200)
         peeps = r.context['people']
@@ -148,5 +155,21 @@ class TestSearch(ESTestCase):
         assert not pq(r.content)('.result')
 
         r = self.mozillian_client.get(search_url,
-                                      dict(q=u'', nonvouched_only=1))
-        assert pq(r.content)('.result')
+                                      dict(q=u''))
+
+        assert not pq(r.content)('.result')
+        assert pq(r.content)('#not-found')
+
+    def test_single_result(self):
+        amanda = 'Amanda Younger'
+        amandeep = 'Amandeep McIlrath'
+        url = reverse('search')
+
+        rnv = self.mozillian_client.get(url, dict(q='Am', nonvouched_only=1), follow=True)
+
+        eq_(rnv.status_code, 200)
+        peeps_nv = pq(rnv.content)
+
+        shown_name = peeps_nv('#profile-info h2').text()
+        assert (amanda in shown_name)
+        assert not(amandeep in shown_name)

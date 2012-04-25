@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseForbidden, HttpResponseRedirect, Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.cache import cache_page, never_cache
 from django.views.decorators.http import require_POST
 
@@ -42,11 +42,7 @@ def vouch_required(f):
 @login_required
 def profile(request, username):
     """View a profile by username."""
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        raise Http404
-
+    user = get_object_or_404(User, username=username)
     vouch_form = None
     profile = user.get_profile()
 

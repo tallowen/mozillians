@@ -174,7 +174,9 @@ class TestSearch(ESTestCase):
         if not settings.ES_DISABLED:
             get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
 
-        rnv = self.mozillian_client.get(reverse('search'), dict(q='Fin', nonvouched_only=1), follow=True)
+        rnv = self.mozillian_client.get(reverse('search'),
+                                        dict(q='Fin', nonvouched_only=1),
+                                             follow=True)
 
         eq_(rnv.status_code, 200)
 

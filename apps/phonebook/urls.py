@@ -22,12 +22,12 @@ urlpatterns = patterns('',
     url('^invited/(?P<id>\d+)$', views.invited, name='invited'),
 
     # Static pages need csrf for browserID post to work
-    url('^about$', anonymous_csrf(direct_to_template),
-        dict(template='phonebook/about.html'), name='about'),
+    url('^about$', anonymous_csrf(direct_to_template), {'template': 'phonebook/about.html'},
+        name='about'),
     url('^confirm-register$', direct_to_template,
-        dict(template='phonebook/confirm_register.html'),
+        {'template': 'phonebook/confirm_register.html'},
         name='confirm_register'),
     url('^$', anonymous_csrf(direct_to_template),
-        dict(template='phonebook/home.html'), name='home'),
+        {'template': 'phonebook/home.html'}, name='home'),
     url(r'^(?P<username>(u\/)?[\w.@+-]{1,30})$', views.profile, name='profile'),
 )

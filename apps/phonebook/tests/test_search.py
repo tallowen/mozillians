@@ -1,7 +1,10 @@
 from nose.tools import eq_
 from pyquery import PyQuery as pq
 
+from django.conf import settings
+
 from common.tests import ESTestCase
+from elasticutils import get_es
 from funfactory.urlresolvers import reverse
 
 from users.models import UserProfile
@@ -161,15 +164,16 @@ class TestSearch(ESTestCase):
         assert pq(r.content)('#not-found')
 
     def test_single_result(self):
-        amanda = 'Amanda Younger'
-        amandeep = 'Amandeep McIlrath'
-        url = reverse('search')
+        findme = "Findme Ifyoucan"
+        user(first_name='Findme', last_name='Ifyoucan')
 
-        rnv = self.mozillian_client.get(url, dict(q='Am', nonvouched_only=1), follow=True)
+        if not settings.ES_DISABLED:
+            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
+
+        rnv = self.mozillian_client.get(reverse('search'), dict(q='Fin', nonvouched_only=1), follow=True)
 
         eq_(rnv.status_code, 200)
         peeps_nv = pq(rnv.content)
 
         shown_name = peeps_nv('#profile-info h2').text()
-        assert (amanda in shown_name)
-        assert not(amandeep in shown_name)
+        assert (findme in shown_name)

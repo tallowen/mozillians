@@ -164,8 +164,7 @@ class TestSearch(ESTestCase):
         assert pq(r.content)('#not-found')
 
     def test_single_result(self):
-        findme = "Findme Ifyoucan"
-        user(first_name='Findme', last_name='Ifyoucan')
+        u = user(first_name='Findme', last_name='Ifyoucan')
 
         if not settings.ES_DISABLED:
             get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
@@ -173,7 +172,6 @@ class TestSearch(ESTestCase):
         rnv = self.mozillian_client.get(reverse('search'), dict(q='Fin', nonvouched_only=1), follow=True)
 
         eq_(rnv.status_code, 200)
-        peeps_nv = pq(rnv.content)
 
-        shown_name = peeps_nv('#profile-info h2').text()
-        assert (findme in shown_name)
+        eq_('{0} {1}'.format(u.first_name, u.last_name),
+                pq(rnv.content)('#profile-info h2').text(), 'Should be redirected to a user with the right name')

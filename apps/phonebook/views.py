@@ -5,7 +5,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseRedirect, Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import cache_page, never_cache
 from django.views.decorators.http import require_POST
@@ -42,13 +42,10 @@ def vouch_required(f):
 @login_required
 def profile(request, username):
     """View a profile by username."""
-    # Try to match a view if it exists with a slash.
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        # This is so that something like localhost:8000/tasks redirects
-        # to localhost:8000/tasks/ correctly.
-        return redirect(request.path + r'/')
+        raise Http404
 
     vouch_form = None
     profile = user.get_profile()

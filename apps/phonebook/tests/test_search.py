@@ -153,17 +153,22 @@ class TestSearch(ESTestCase):
         assert UserProfile.search('').count()
 
     def test_proper_url_arg_handling(self):
+        """Make sure URL arguments are handled correctly"""
+        #Create a new unvouched user
+        user()
         search_url = reverse('search')
         r = self.mozillian_client.get(search_url)
         assert not pq(r.content)('.result')
 
         r = self.mozillian_client.get(search_url,
-                                      dict(q=u''))
+                                      dict(q=u'', nonvouched_only=1))
 
-        assert not pq(r.content)('.result')
-        assert pq(r.content)('#not-found')
+        assert pq(r.content)('.result')
 
     def test_single_result(self):
+        """Makes sure the client is redirected to the users page
+        if they are the only result returned by the query.
+        """
         u = user(first_name='Findme', last_name='Ifyoucan')
 
         if not settings.ES_DISABLED:

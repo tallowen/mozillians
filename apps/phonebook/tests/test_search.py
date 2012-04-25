@@ -180,4 +180,4 @@ class TestSearch(ESTestCase):
 
         eq_('{0} {1}'.format(u.first_name, u.last_name),
                 pq(rnv.content)('#profile-info h2').text(),
-                                'Should be redirected to a user with the right name')
+                'Should be redirected to a user with the right name')

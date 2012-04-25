@@ -156,6 +156,10 @@ class TestSearch(ESTestCase):
         """Make sure URL arguments are handled correctly"""
         #Create a new unvouched user
         user()
+
+        if not settings.ES_DISABLED:
+            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
+
         search_url = reverse('search')
         r = self.mozillian_client.get(search_url)
         assert not pq(r.content)('.result')
@@ -180,6 +184,6 @@ class TestSearch(ESTestCase):
 
         eq_(rnv.status_code, 200)
 
-        eq_('{0} {1}'.format(u.first_name, u.last_name),
-                pq(rnv.content)('#profile-info h2').text(),
-                'Should be redirected to a user with the right name')
+        eq_(u.get_profile().display_name,
+            pq(rnv.content)('#profile-info h2').text(),
+            'Should be redirected to a user with the right name')

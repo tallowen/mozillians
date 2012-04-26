@@ -12,12 +12,10 @@ from phonebook.tests import user
 
 
 class TestSearch(ESTestCase):
-
     def test_search_with_space(self):
         """Extra spaces should not impact search queries."""
         amanda = 'Amanda Younger'
         amandeep = 'Amandeep McIlrath'
-
         url = reverse('search')
         r = self.mozillian_client.get(url, dict(q='Am'))
         rs = self.mozillian_client.get(url, dict(q=' Am'))
@@ -45,9 +43,6 @@ class TestSearch(ESTestCase):
         amandeep = 'Amandeep McIlrath'
 
         user(first_name='Amanda', last_name='Unvouched')
-
-        if not settings.ES_DISABLED:
-            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
 
         url = reverse('search')
         r = self.mozillian_client.get(url, dict(q='Am'))
@@ -154,7 +149,6 @@ class TestSearch(ESTestCase):
 
         r = self.mozillian_client.get(search_url,
                                       dict(q=u'', nonvouched_only=1))
-
         assert pq(r.content)('.result')
 
     def test_single_result(self):

@@ -3,11 +3,9 @@ import os
 import random
 from string import letters
 
-from django import test
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files import File
-from funfactory.urlresolvers import reverse
 
 from elasticutils import get_es
 
@@ -54,24 +52,3 @@ def user(**kwargs):
     if not settings.ES_DISABLED:
         get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
     return user
-
-
-def vouch(user):
-    profile = user.get_profile()
-    profile.is_vouched = True
-    profile.save()
-
-
-def add_profilepic(user):
-    client = test.Client()
-
-    client.login(email=user.email)
-
-    with open(os.path.join(os.path.dirname(__file__), 'profile-photo.jpg')) as f:
-        r = client.post(reverse('profile.edit'),
-            dict(first_name=user.first_name, last_name=user.last_name, photo=f))
-
-    if not settings.ES_DISABLED:
-            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
-
-    client.logout()

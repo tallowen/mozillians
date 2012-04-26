@@ -46,6 +46,6 @@ def add_profilepic(user):
             dict(first_name=user.first_name, last_name=user.last_name, photo=f))
 
     if not settings.ES_DISABLED:
-        get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
+            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
 
     client.logout()

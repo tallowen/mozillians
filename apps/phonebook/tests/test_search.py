@@ -43,7 +43,11 @@ class TestSearch(ESTestCase):
         """Make sure that only non vouched users are returned on search."""
         amanda = 'Amanda Younger'
         amandeep = 'Amandeep McIlrath'
+
         user(first_name='Amanda', last_name='Unvouched')
+
+        if not settings.ES_DISABLED:
+            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
 
         url = reverse('search')
         r = self.mozillian_client.get(url, dict(q='Am'))
@@ -109,7 +113,7 @@ class TestSearch(ESTestCase):
         assert amanda in [p.display_name for p in peeps]
         # Make sure she doesn't show up in peeps_pp
         assert amanda not in [p.display_name for p in peeps_pp]
-        self.assertEqual(peeps_pp[0].display_name, amanhasapic)
+        assert amanhasapic in [p.display_name for p in peeps_pp]
         self.assertTrue(saw_amanda, 'We dont see profile picture')
 
     def test_mozillian_search_pagination(self):
@@ -180,7 +184,7 @@ class TestSearch(ESTestCase):
 
         rnv = self.mozillian_client.get(reverse('search'),
                                         dict(q='Fin', nonvouched_only=1),
-                                             follow=True)
+                                        follow=True)
 
         eq_(rnv.status_code, 200)
 

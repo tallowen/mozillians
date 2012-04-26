@@ -91,9 +91,9 @@ class TestSearch(ESTestCase):
         eq_(r.status_code, 200)
         peeps = r.context['people']
         # Make sure u shows up in normal search
-        assert u.username in [p.username for p in peeps]
+        assert u.id in [p.user.id for p in peeps]
         # Make sure u doesn't show up in picture only search
-        assert u.username not in [p.username for p in pics_only_peeps]
+        assert u.id not in [p.user.id for p in pics_only_peeps]
 
     def test_mozillian_search_pagination(self):
         """Tests the pagination on search.

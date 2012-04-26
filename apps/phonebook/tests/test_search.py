@@ -8,7 +8,7 @@ from elasticutils import get_es
 from funfactory.urlresolvers import reverse
 
 from users.models import UserProfile
-from phonebook.tests import user, vouch, add_profilepic
+from phonebook.tests import user
 
 
 class TestSearch(ESTestCase):
@@ -78,43 +78,27 @@ class TestSearch(ESTestCase):
     def test_profilepic_search(self):
         """Make sure searching for only users with profile pics works."""
 
-        u = user(first_name='Aman', last_name='Withapic')
-        vouch(u)
-        add_profilepic(u)
+        user(first_name='Aman', vouched=True, photo=True)
+        user(first_name='Amanda', vouched=True, photo=True)
+        u = user(firset_name='Amihuman', vouched=True)
 
-        p = user(first_name='Amanda', last_name='Picture')
-        vouch(p)
-        add_profilepic(p)
+        self.client.login(email=u.email)
 
-        s = user(email='usedtosearch@example.com')
-        vouch(s)
-
-        self.client.login(email="usedtosearch@example.com")
-
-        amanhasapic = 'Aman Withapic'
-        amanda = 'Amanda Younger'
         url = reverse('search')
-        r = self.client.get(url, dict(q='Am'))
-        rpp = self.client.get(url, dict(q='Am', picture_only=1))
 
+        r_pics_only = self.client.get(url, dict(q='Am', picture_only=1))
+        eq_(r_pics_only.status_code, 200)
+        pics_only_peeps = r_pics_only.context['people']
+        for person in pics_only_peeps:
+            assert person.photo, 'Every person should have a photo'
+
+        r = self.client.get(url, dict(q='Am'))
         eq_(r.status_code, 200)
         peeps = r.context['people']
-        peeps_pp = rpp.context['people']
-        saw_amanda = False
-
-        # Make sure that every body has a profile picture
-        for person in peeps:
-            if person.display_name == amanda:
-                if bool(person.photo):
-                    self.fail('Amanda doesnt have a profile pic')
-                saw_amanda = True
-
-        # Make sure amanda shows up in peeps
-        assert amanda in [p.display_name for p in peeps]
-        # Make sure she doesn't show up in peeps_pp
-        assert amanda not in [p.display_name for p in peeps_pp]
-        assert amanhasapic in [p.display_name for p in peeps_pp]
-        self.assertTrue(saw_amanda, 'We dont see profile picture')
+        # Make sure u shows up in normal search
+        assert u.username in [p.username for p in peeps]
+        # Make sure u doesn't show up in picture only search
+        assert u.username not in [p.username for p in pics_only_peeps]
 
     def test_mozillian_search_pagination(self):
         """Tests the pagination on search.
@@ -178,16 +162,13 @@ class TestSearch(ESTestCase):
         if they are the only result returned by the query.
         """
         u = user(first_name='Findme', last_name='Ifyoucan')
+        client = self.client.login(u=user(vouched=True).email)
 
-        if not settings.ES_DISABLED:
-            get_es().refresh(settings.ES_INDEXES['default'], timesleep=0)
+        r = client.get(reverse('search'), dict(q='Fin', nonvouched_only=1),
+                       follow=True)
 
-        rnv = self.mozillian_client.get(reverse('search'),
-                                        dict(q='Fin', nonvouched_only=1),
-                                        follow=True)
-
-        eq_(rnv.status_code, 200)
+        eq_(r.status_code, 200)
 
         eq_(u.get_profile().display_name,
-            pq(rnv.content)('#profile-info h2').text(),
+            pq(r.content)('#profile-info h2').text(),
             'Should be redirected to a user with the right name')

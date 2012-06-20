@@ -60,6 +60,7 @@ class UserProfile(SearchMixin, models.Model):
 
     def anonymize(self):
         """Remove personal info from a user"""
+        EmailAddress.objects.get(profile=self).delete()
 
         for name in ['first_name', 'last_name', 'email']:
             setattr(self.user, name, '')
@@ -149,12 +150,13 @@ class UserProfile(SearchMixin, models.Model):
             'id', 'is_vouched', 'website', 'bio', 'display_name', 'ircname')
         d = dict((a, getattr(self, a)) for a in attrs)
         # user data
-        attrs = ('username', 'first_name', 'last_name', 'email', 'last_login',
+        attrs = ('username', 'first_name', 'last_name', 'last_login',
                  'date_joined')
         d.update(dict((a, getattr(self.user, a)) for a in attrs))
-        d.update(dict(has_photo=bool(self.photo)))
+        d.update(has_photo=bool(self.photo))
         # Index groups and skills ... for fun.
         d.update(dict(groups=list(self.groups.values_list('name', flat=True))))
+        d.update(emails=[e.email for e in EmailAddress.objects.filter(profile=self)])
         return d
 
     @classmethod
@@ -229,3 +231,14 @@ def update_search_index(sender, instance, **kw):
 def remove_from_search_index(sender, instance, **kw):
     from elasticutils import tasks
     tasks.unindex_objects.delay(sender, [instance.id])
+
+
+class EmailAddress(models.Model):
+    profile = models.ForeignKey(UserProfile)
+    email = models.EmailField(unique=True)
+
+    class Meta:
+        db_table = 'emailaddress'
+
+    def __unicode__(self):
+        return self.email

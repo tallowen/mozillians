@@ -76,11 +76,15 @@
       </h2>
 
       <dl>
-        {% if shown_user.email %}
+        {% if emails %}
           <dt>{{ _('Email') }}</dt>
-          <dd><a href="mailto:{{ shown_user.email }}">
-            {{ shown_user.email }}
-          </a></dd>
+          {% for email in emails %}
+            <dd>
+              <a href="mailto:{{ email }}">
+                {{ email }}
+              </a>
+            </dd>
+          {% endfor %}
         {% endif %}
 
         {% if not shown_user.username.startswith('u/') %}

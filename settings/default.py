@@ -92,6 +92,7 @@ MINIFY_BUNDLES = {
         ),
         'edit_profile': (
             'js/libs/tag-it/js/tag-it.js',
+            'js/addbrowseridemail.js'
         ),
         'search': (
             'js/libs/jquery.endless-scroll.js',

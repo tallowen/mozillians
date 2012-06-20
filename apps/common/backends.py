@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 import commonware.log
 from django_browserid.auth import BrowserIDBackend
 
+from Users.models import EmailAddress
+
 log = commonware.log.getLogger('b.common')
 
 
@@ -24,19 +26,20 @@ class MozilliansBrowserID(BrowserIDBackend):
 
     def authenticate(self, assertion=None, audience=None, authenticated_email=None):
         if authenticated_email:
-            users = User.objects.filter(email=authenticated_email)
-            if len(users) > 1:
-                log.warn('%d users with email address %s.' % (
-                        len(users), authenticated_email))
-                return None
-            if len(users) == 1:
-                return users[0]
+            import ipdb; ipdb.set_trace()
+            return EmailAddress.objects.get(email=authenticated_email).profile.user
 
         return super(MozilliansBrowserID, self).authenticate(
                                         assertion=assertion, audience=audience)
 
     def create_user(self, email):
-        return User.objects.create_user(get_username(email), email)
+        import ipdb; ipdb.set_trace()
+        user = User.objects.create_user(get_username(email), email)
+        EmailAddress.objects.create(profile=user.get_profile(), email=email)
+        return user
+
+    def filter_users_by_email(self, email):
+        return [e.profile.user for e in EmailAddress.objects.filter(email=email)]
 
 
 class TestBackend(object):

@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 
 from django.contrib import messages
@@ -5,19 +6,20 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.cache import cache_page, never_cache
 from django.views.decorators.http import require_POST
 
 import commonware.log
+from django_browserid import get_audience, verify
 from funfactory.urlresolvers import reverse
 from tower import ugettext as _
 
 from groups.helpers import stringify_groups
 from phonebook import forms
 from phonebook.models import Invite
-from users.models import UserProfile
+from users.models import EmailAddress, UserProfile
 
 log = commonware.log.getLogger('m.phonebook')
 
@@ -45,11 +47,13 @@ def profile(request, username):
     user = get_object_or_404(User, username=username)
     vouch_form = None
     profile = user.get_profile()
+    emails = [e.email for e in EmailAddress.objects.filter(profile=profile)]
 
     if not profile.is_vouched and request.user.get_profile().is_vouched:
         vouch_form = forms.VouchForm(initial=dict(vouchee=profile.pk))
 
-    data = dict(shown_user=user, profile=profile, vouch_form=vouch_form)
+    data = dict(shown_user=user, profile=profile,
+                vouch_form=vouch_form, emails=emails)
     return render(request, 'phonebook/profile.html', data)
 
 
@@ -95,14 +99,47 @@ def edit_profile(request):
                 initial=initial,
         )
 
-    # When changing this keep in mind that the same view is used for
-    # user.register.
+    emails = EmailAddress.objects.filter(profile=profile)
+    email_json = json.dumps([e.email for e in emails])
+    print email_json
     d = dict(form=form,
+             emails=emails,
              mode='edit',
              user_groups=user_groups,
              my_vouches=UserProfile.objects.filter(vouched_by=profile),
-             profile=profile)
+             profile=profile,
+             email_json=email_json)
     return render(request, 'phonebook/edit_profile.html', d)
+
+
+def add_email(request):
+    result = verify(request.POST['assertion'], get_audience(request))
+    profile = request.user.get_profile()
+    if result:
+        email = result['email']
+        try:
+            EmailAddress.objects.create(
+                email=email,
+                profile=profile)
+        except:
+            pass
+
+    emails = [e.email for e in EmailAddress.objects.filter(profile=profile)]
+    return HttpResponse(json.dumps({'emails': emails}))
+
+
+def delete_email(request, email):
+    input_emails = EmailAddress.objects.filter(email=email)
+    profile = request.user.get_profile()
+
+    if len(input_emails) == 1:
+        input_email = input_emails[0]
+        if input_email.profile == profile:
+            input_email.delete()
+
+    emails = [e.email for e in EmailAddress.objects.filter(profile=profile)]
+    return HttpResponse(json.dumps({'emails': emails}))
+
 
 
 @never_cache

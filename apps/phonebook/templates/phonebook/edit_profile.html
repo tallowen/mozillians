@@ -92,9 +92,11 @@
         <div class="tab-pane" id="account">
           {{ bootstrap(form.username) }}
           <div class="control-group">
-            <label class="control-label">{{ _('BrowserID Email') }}</label>
-            <div class="controls">
-              <span class="label-text">{{ user.email }}</span>
+            <label class="control-label">{{ _('Email Addresses') }}</label>
+            <div class="controls" id="emails" data-emails='{{ email_json|safe }}'>
+              <a href="#add_email" class="browser_id_add_email">
+                <span class="label-text">{{ _('Add an Address') }}</span>
+              </a>
             </div>
           </div>
           <div class="control-group">
